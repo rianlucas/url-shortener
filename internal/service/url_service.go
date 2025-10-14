@@ -27,3 +27,12 @@ func (u *UrlService) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 
 	return u.repository.Create(urlDto)
 }
+
+func (u *UrlService) FindByShortCode(shortCode string) (models.Url, error) {
+	result, err := u.repository.FindByShortCode(shortCode)
+	if err != nil {
+		return models.Url{}, err
+	}
+
+	return result, nil
+}
