@@ -13,7 +13,7 @@ type UrlHandler struct {
 	Service *service.UrlService
 }
 
-func CreateUrlHandler(urlService *service.UrlService) *UrlHandler {
+func NewUrlHandler(urlService *service.UrlService) *UrlHandler {
 	return &UrlHandler{Service: urlService}
 }
 
@@ -23,7 +23,7 @@ func (u *UrlHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		json.NewEncoder(w).Encode(map[string]string{
-			"message": fmt.Sprintf("O método %s não é permitido para essa rota. Utilize POST", r.Method),
+			"message": fmt.Sprintf("the method %s is not supported by this route, use POST instead", r.Method),
 		})
 		return
 	}
@@ -31,10 +31,28 @@ func (u *UrlHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var urlDto dto.CreateUrlDto
 	err := json.NewDecoder(r.Body).Decode(&urlDto)
 	if err != nil {
-		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid JSON format",
+		})
+		return
 	}
 
-	result := u.Service.Create(urlDto)
+	if urlDto.LongUrl == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "longUrl is required",
+		})
+		return
+	}
+
+	result, err := u.Service.Create(urlDto)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": fmt.Sprintf("error while creating a Url: %v", err),
+		})
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(result)
