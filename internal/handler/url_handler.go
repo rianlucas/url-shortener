@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/rianlucas/url-shortener/internal/dto"
 	"github.com/rianlucas/url-shortener/internal/service"
@@ -57,4 +58,29 @@ func (u *UrlHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(result)
 
+}
+
+func (u *UrlHandler) FindByShortCode(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	shortCode := strings.TrimPrefix(r.URL.Path, "/")
+
+	if shortCode == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "shortCode is required in URL path",
+		})
+		return
+	}
+
+	url, err := u.Service.FindByShortCode(shortCode)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": fmt.Sprintf("%v", err),
+		})
+		return
+	}
+
+	http.Redirect(w, r, url.LongUrl, 302)
 }

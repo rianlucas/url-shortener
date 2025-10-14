@@ -39,7 +39,15 @@ func main() {
 	urlService := service.NewUrlService(urlRepository)
 	urlHandler := handler.NewUrlHandler(urlService)
 
-	http.HandleFunc("/", urlHandler.Create)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			urlHandler.Create(w, r)
+		} else if r.Method == "GET" {
+			urlHandler.FindByShortCode(w, r)
+		} else {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
