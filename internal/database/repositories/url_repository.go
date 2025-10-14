@@ -16,20 +16,20 @@ type UrlRepository struct {
 	Client *mongo.Client
 }
 
-func CreateUrlRepository(ctx context.Context, client *mongo.Client) *UrlRepository {
+func NewUrlRepository(ctx context.Context, client *mongo.Client) *UrlRepository {
 	return &UrlRepository{
 		ctx:    ctx,
 		Client: client,
 	}
 }
 
-func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) models.Url {
+func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 	collection := s.Client.Database("url-shortener").Collection("urls")
 
 	newUrl := models.Url{
 		LongUrl:     urlDto.LongUrl,
 		ShortCode:   urlDto.ShortCode,
-		AccessCount: urlDto.AccessCode,
+		AccessCount: urlDto.AccessCount,
 	}
 
 	now := time.Now()
@@ -38,7 +38,7 @@ func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) models.Url {
 
 	result, err := collection.InsertOne(s.ctx, newUrl)
 	if err != nil {
-		fmt.Println(err)
+		return models.Url{}, fmt.Errorf("failed to insert URL into database: %w", err)
 	}
 
 	id := fmt.Sprintf("%v", result.InsertedID)
@@ -46,7 +46,7 @@ func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) models.Url {
 	id = strings.TrimSuffix(id, "\")")
 
 	newUrl.ID = id
-	return newUrl
+	return newUrl, nil
 }
 
 func (s *UrlRepository) Update() string {

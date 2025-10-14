@@ -35,9 +35,9 @@ func main() {
 		}
 	}()
 
-	urlRepository := repositories.CreateUrlRepository(ctx, client)
-	urlService := service.CreateUrlService(urlRepository)
-	urlHandler := handler.CreateUrlHandler(urlService)
+	urlRepository := repositories.NewUrlRepository(ctx, client)
+	urlService := service.NewUrlService(urlRepository)
+	urlHandler := handler.NewUrlHandler(urlService)
 
 	http.HandleFunc("/", urlHandler.Create)
 
