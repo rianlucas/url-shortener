@@ -8,6 +8,6 @@ import (
 
 type UrlRepositoryInterface interface {
 	Create(dto dto.CreateUrlDto) *mongo.InsertOneResult
-	Update() string
+	Update(url models.Url) (bool, error)
 	FindByShortCode(shortCode string) (models.Url, error)
 }

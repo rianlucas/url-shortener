@@ -24,8 +24,8 @@ func NewUrlRepository(ctx context.Context, client *mongo.Client) *UrlRepository 
 	}
 }
 
-func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
-	collection := s.Client.Database("url-shortener").Collection("urls")
+func (u *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
+	collection := u.Client.Database("url-shortener").Collection("urls")
 
 	newUrl := models.Url{
 		LongUrl:     urlDto.LongUrl,
@@ -37,7 +37,7 @@ func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 	newUrl.CreatedAt = now
 	newUrl.UpdatedAt = now
 
-	result, err := collection.InsertOne(s.ctx, newUrl)
+	result, err := collection.InsertOne(u.ctx, newUrl)
 	if err != nil {
 		return models.Url{}, fmt.Errorf("failed to insert URL into database: %w", err)
 	}
@@ -49,9 +49,22 @@ func (s *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 	return newUrl, nil
 }
 
-func (s *UrlRepository) Update() string {
-	//TODO implement me
-	panic("implement me")
+func (u *UrlRepository) Update(url models.Url) (bool, error) {
+	collection := u.Client.Database("url-shortener").Collection("urls")
+
+	update := bson.D{
+		{
+			"$inc", bson.D{
+				{"accessCount", 1},
+			},
+		},
+	}
+
+	result, err := collection.UpdateByID(u.ctx, url.ID, update)
+	if err != nil {
+		return false, err
+	}
+	return result.ModifiedCount > 0, nil
 }
 
 func (u *UrlRepository) FindByShortCode(shortCode string) (models.Url, error) {

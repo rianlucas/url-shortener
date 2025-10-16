@@ -36,3 +36,7 @@ func (u *UrlService) FindByShortCode(shortCode string) (models.Url, error) {
 
 	return result, nil
 }
+
+func (u *UrlService) Update(url models.Url) (bool, error) {
+	return u.repository.Update(url)
+}

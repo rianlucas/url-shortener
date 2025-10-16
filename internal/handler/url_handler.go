@@ -81,6 +81,13 @@ func (u *UrlHandler) FindByShortCode(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	_, err = u.Service.Update(url)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": fmt.Sprintf("%v", err),
+		})
+		return
+	}
 
 	http.Redirect(w, r, url.LongUrl, 302)
 }
