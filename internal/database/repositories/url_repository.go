@@ -76,7 +76,7 @@ func (u *UrlRepository) FindByShortCode(shortCode string) (models.Url, error) {
 	err := result.Decode(&urlEntity)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return models.Url{}, fmt.Errorf("URL with shortCode '%s' not found", shortCode)
+			return models.Url{}, fmt.Errorf("URL with shortCode '%s' not found: %w", shortCode, err)
 		}
 		return models.Url{}, fmt.Errorf("failed to decode URL: %w", err)
 	}
