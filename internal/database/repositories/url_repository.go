@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rianlucas/url-shortener/internal/database"
 	"time"
 
 	"github.com/rianlucas/url-shortener/internal/dto"
@@ -13,19 +14,18 @@ import (
 )
 
 type UrlRepository struct {
-	ctx    context.Context
-	Client *mongo.Client
+	ctx        context.Context
+	collection *mongo.Collection
 }
 
 func NewUrlRepository(ctx context.Context, client *mongo.Client) *UrlRepository {
 	return &UrlRepository{
-		ctx:    ctx,
-		Client: client,
+		ctx:        ctx,
+		collection: client.Database("url-shortener").Collection(database.UrlCollection),
 	}
 }
 
 func (u *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
-	collection := u.Client.Database("url-shortener").Collection("urls")
 
 	newUrl := models.Url{
 		LongUrl:     urlDto.LongUrl,
@@ -37,7 +37,7 @@ func (u *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 	newUrl.CreatedAt = now
 	newUrl.UpdatedAt = now
 
-	result, err := collection.InsertOne(u.ctx, newUrl)
+	result, err := u.collection.InsertOne(u.ctx, newUrl)
 	if err != nil {
 		return models.Url{}, fmt.Errorf("failed to insert URL into database: %w", err)
 	}
@@ -50,8 +50,6 @@ func (u *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 }
 
 func (u *UrlRepository) Update(url models.Url) (bool, error) {
-	collection := u.Client.Database("url-shortener").Collection("urls")
-
 	update := bson.D{
 		{
 			"$inc", bson.D{
@@ -60,7 +58,7 @@ func (u *UrlRepository) Update(url models.Url) (bool, error) {
 		},
 	}
 
-	result, err := collection.UpdateByID(u.ctx, url.ID, update)
+	result, err := u.collection.UpdateByID(u.ctx, url.ID, update)
 	if err != nil {
 		return false, err
 	}
@@ -69,9 +67,8 @@ func (u *UrlRepository) Update(url models.Url) (bool, error) {
 
 func (u *UrlRepository) FindByShortCode(shortCode string) (models.Url, error) {
 	var urlEntity models.Url
-	collection := u.Client.Database("url-shortener").Collection("urls")
 
-	result := collection.FindOne(u.ctx, bson.M{"shortCode": shortCode})
+	result := u.collection.FindOne(u.ctx, bson.M{"shortCode": shortCode})
 
 	err := result.Decode(&urlEntity)
 	if err != nil {
