@@ -6,3 +6,15 @@ services:
       - "27017:27017"
     volumes:
       - "./docker/data/db:/data/db"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "api"
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
