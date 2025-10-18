@@ -5,13 +5,13 @@ import (
 )
 
 type Config struct {
-	ServerPort string `json:"SERVER_PORT"`
-	DbConn     string `json:"DB_URL"`
+	DbConn string `mapstructure:"DB_URL"`
 }
 
 func LoadConfig() (c Config, err error) {
-	viper.AddConfigPath("../")
-	viper.SetConfigName("dev")
+	// Try multiple paths to find .env file
+	viper.AddConfigPath(".") // current directory
+	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
@@ -26,5 +26,5 @@ func LoadConfig() (c Config, err error) {
 		panic(err)
 	}
 
-	return
+	return c, nil
 }

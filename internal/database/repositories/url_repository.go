@@ -18,10 +18,10 @@ type UrlRepository struct {
 	collection *mongo.Collection
 }
 
-func NewUrlRepository(ctx context.Context, client *mongo.Client) *UrlRepository {
+func NewUrlRepository(ctx context.Context, db *mongo.Database) *UrlRepository {
 	return &UrlRepository{
 		ctx:        ctx,
-		collection: client.Database("url-shortener").Collection(database.UrlCollection),
+		collection: db.Collection(database.UrlCollection),
 	}
 }
 
@@ -36,6 +36,8 @@ func (u *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 	now := time.Now()
 	newUrl.CreatedAt = now
 	newUrl.UpdatedAt = now
+
+	fmt.Printf("Creating new URL: %+v\n", newUrl)
 
 	result, err := u.collection.InsertOne(u.ctx, newUrl)
 	if err != nil {

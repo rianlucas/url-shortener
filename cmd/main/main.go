@@ -3,30 +3,35 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/rianlucas/url-shortener/config"
+	"github.com/rianlucas/url-shortener/internal/database"
 	"net/http"
 
 	"github.com/rianlucas/url-shortener/internal/database/repositories"
 	"github.com/rianlucas/url-shortener/internal/handler"
 	"github.com/rianlucas/url-shortener/internal/service"
-	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func main() {
-	viper.SetConfigFile(".env")
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	dbUrl := viper.Get("DB_URL").(string)
-
-	client, err := mongo.Connect(options.Client().ApplyURI(dbUrl))
-	ctx := context.Background()
-
+	conf, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
+	}
+	dbUrl := conf.DbConn
+
+	ctx := context.Background()
+
+	client, err := mongo.Connect(options.Client().ApplyURI(dbUrl))
+	if err != nil {
+		panic(err)
+	}
+
+	db := client.Database("url_shortener")
+	err = database.CreateUrlIndexes(db)
+	if err != nil {
+		fmt.Println("Error creating indexes:", err)
 	}
 
 	defer func() {
@@ -35,7 +40,7 @@ func main() {
 		}
 	}()
 
-	urlRepository := repositories.NewUrlRepository(ctx, client)
+	urlRepository := repositories.NewUrlRepository(ctx, db)
 	urlService := service.NewUrlService(urlRepository)
 	urlHandler := handler.NewUrlHandler(urlService)
 
