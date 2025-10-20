@@ -36,6 +36,7 @@ func (u *UrlRepository) Create(urlDto dto.CreateUrlDto) (models.Url, error) {
 	now := time.Now()
 	newUrl.CreatedAt = now
 	newUrl.UpdatedAt = now
+	newUrl.AccessCount = 0
 
 	// Default: URLs expire 30 days from creation
 	newUrl.ExpiresAt = now.AddDate(0, 0, 30)
