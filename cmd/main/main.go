@@ -2,19 +2,23 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/rianlucas/url-shortener/config"
 	"github.com/rianlucas/url-shortener/internal/database"
-	"net/http"
-
 	"github.com/rianlucas/url-shortener/internal/database/repositories"
 	"github.com/rianlucas/url-shortener/internal/handler"
 	"github.com/rianlucas/url-shortener/internal/service"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"net/http"
+	"time"
 )
 
 func main() {
+
+	limiter := time.Tick(2 * time.Second)
+
 	conf, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -45,13 +49,25 @@ func main() {
 	urlHandler := handler.NewUrlHandler(urlService)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
-			urlHandler.Create(w, r)
-		} else if r.Method == "GET" {
-			urlHandler.FindByShortCode(w, r)
-		} else {
-			w.WriteHeader(http.StatusMethodNotAllowed)
+		select {
+		case <-limiter:
+			if r.Method == "POST" {
+				urlHandler.Create(w, r)
+			} else if r.Method == "GET" {
+				urlHandler.FindByShortCode(w, r)
+			} else {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+
+		default:
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Header().Set("Content-Type", "Application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"success": false,
+				"error":   "too many requests",
+			})
 		}
+
 	})
 
 	err = http.ListenAndServe(":8000", nil)
