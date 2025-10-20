@@ -10,11 +10,22 @@ import (
 func CreateUrlIndexes(db *mongo.Database) error {
 	collection := db.Collection(UrlCollection)
 
-	indexModel := mongo.IndexModel{
+	// Unique index on shortCode
+	uniqueIndexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: "shortCode", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := collection.Indexes().CreateOne(context.Background(), indexModel)
+	_, err := collection.Indexes().CreateOne(context.Background(), uniqueIndexModel)
+	if err != nil {
+		return err
+	}
+
+	ttlIndexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "expiresAt", Value: 1}},
+		Options: options.Index().SetExpireAfterSeconds(0),
+	}
+
+	_, err = collection.Indexes().CreateOne(context.Background(), ttlIndexModel)
 	return err
 }

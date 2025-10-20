@@ -13,4 +13,5 @@ type Url struct {
 	AccessCount int           `bson:"accessCount" json:"accessCount"`
 	CreatedAt   time.Time     `bson:"createdAt" json:"-"`
 	UpdatedAt   time.Time     `bson:"updatedAt" json:"-"`
+	ExpiresAt   time.Time     `bson:"expiresAt,omitempty" json:"expiresAt,omitempty"`
 }
