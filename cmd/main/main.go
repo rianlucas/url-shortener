@@ -17,7 +17,7 @@ import (
 
 func main() {
 
-	limiter := time.Tick(2 * time.Second)
+	limiter := time.Tick(100 * time.Millisecond)
 
 	conf, err := config.LoadConfig()
 	if err != nil {
