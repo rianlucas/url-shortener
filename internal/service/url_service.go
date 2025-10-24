@@ -8,6 +8,7 @@ import (
 	"github.com/rianlucas/url-shortener/internal/dto"
 	"github.com/rianlucas/url-shortener/internal/models"
 	"github.com/rianlucas/url-shortener/pkg/shortcode"
+	"github.com/skip2/go-qrcode"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -17,6 +18,16 @@ type UrlService struct {
 
 func NewUrlService(repository *repositories.UrlRepository) *UrlService {
 	return &UrlService{repository: repository}
+}
+
+func (u *UrlService) GenerateQrCode(url string) ([]byte, error) {
+	var png []byte
+	png, err := qrcode.Encode(url, qrcode.Medium, 256)
+	if err != nil {
+		return nil, err
+	}
+
+	return png, nil
 }
 
 func (u *UrlService) Create(urlDto dto.CreateUrlDto) (models.Url, error) {

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -90,4 +91,52 @@ func (u *UrlHandler) FindByShortCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, url.LongUrl, 302)
+}
+
+func (u *UrlHandler) ShowQrCode(w http.ResponseWriter, r *http.Request) {
+	shortCode := strings.TrimPrefix(r.URL.Path, "/qr-code/")
+
+	if shortCode == "" {
+		log.Println("[QR-CODE] ERROR: ShortCode is empty!")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": "shortCode is required in URL path. Use /qr-code/{shortCode}",
+		})
+		return
+	}
+
+	log.Printf("[QR-CODE] Searching for URL with shortCode: %s", shortCode)
+	url, err := u.Service.FindByShortCode(shortCode)
+	if err != nil {
+		log.Printf("[QR-CODE] ERROR: URL not found for shortCode '%s': %v", shortCode, err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": fmt.Sprintf("URL not found: %v", err),
+		})
+		return
+	}
+
+	// Construir URL base dinamicamente a partir do request
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, r.Host)
+	shortURL := fmt.Sprintf("%s/%s", baseURL, url.ShortCode)
+
+	log.Printf("[QR-CODE] URL found: %s - Generating QR Code for: %s", url.LongUrl, shortURL)
+	qrcode, err := u.Service.GenerateQrCode(shortURL)
+	if err != nil {
+		log.Printf("[QR-CODE] ERROR: Failed to generate QR Code: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": fmt.Sprintf("failed to generate QR code: %v", err),
+		})
+		return
+	}
+
+	log.Printf("[QR-CODE] QR Code generated successfully for shortCode: %s", shortCode)
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Write(qrcode)
 }
