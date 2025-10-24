@@ -45,7 +45,7 @@ watcher = "cyan"
 time = true
 
 # Mostra apenas os logs da aplicação e não do Air.
-main_only = false
+main_only = true
 
 [misc]
 # Deleta a pasta tmp no encerramento da aplicação.
