@@ -1,5 +1,6 @@
 package database
 
 const (
-	UrlCollection = "urls"
+	UrlCollection            = "urls"
+	ClickAnalyticsCollection = "click_analytics"
 )
