@@ -23,7 +23,7 @@ func NewClickAnalyticsRepository(ctx context.Context, db *mongo.Database) *Click
 	}
 }
 
-func (c *ClickAnalyticsRepository) Create(createClickDto dto.CreateClickDto) (models.ClickAnalytics, error) {
+func (c *ClickAnalyticsRepository) Create(createClickDto *dto.CreateClickDto) (models.ClickAnalytics, error) {
 
 	click := models.ClickAnalytics{
 		UrlId:     createClickDto.UrlId,

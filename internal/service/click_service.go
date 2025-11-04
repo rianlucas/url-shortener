@@ -13,7 +13,14 @@ type ClickService struct {
 	repository repositories.ClickAnalyticsRepository
 }
 
-func (c *ClickService) Create(clickDto dto.CreateClickDto) (models.ClickAnalytics, error) {
+func NewClickService(ctx context.Context, clickRepository *repositories.ClickAnalyticsRepository) *ClickService {
+	return &ClickService{
+		ctx:        ctx,
+		repository: *clickRepository,
+	}
+}
+
+func (c *ClickService) Create(clickDto *dto.CreateClickDto) (models.ClickAnalytics, error) {
 	result, err := c.repository.Create(clickDto)
 	if err != nil {
 		return models.ClickAnalytics{}, err
