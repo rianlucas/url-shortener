@@ -1,0 +1,10 @@
+[
+  {
+    "label": "Go – Debug main",
+    "adapter": "Delve",
+    "request": "launch",
+    "mode": "debug",
+    "program": "./cmd/main", // pacote onde está o main.go
+    "cwd": "/home/rian/Documentos/projects/go/url-shortener", // <-- força o working dir a ser a raiz
+  }
+]
