@@ -7,16 +7,21 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/medama-io/go-useragent"
 	"github.com/rianlucas/url-shortener/internal/dto"
 	"github.com/rianlucas/url-shortener/internal/service"
 )
 
 type UrlHandler struct {
-	Service *service.UrlService
+	Service      *service.UrlService
+	clickService *service.ClickService
 }
 
-func NewUrlHandler(urlService *service.UrlService) *UrlHandler {
-	return &UrlHandler{Service: urlService}
+func NewUrlHandler(urlService *service.UrlService, clickService *service.ClickService) *UrlHandler {
+	return &UrlHandler{
+		Service:      urlService,
+		clickService: clickService,
+	}
 }
 
 func (u *UrlHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +93,23 @@ func (u *UrlHandler) FindByShortCode(w http.ResponseWriter, r *http.Request) {
 			"error": fmt.Sprintf("%v", err),
 		})
 		return
+	}
+
+	var createClickDto dto.CreateClickDto
+
+	ip := getIP(r)
+	uaString := r.Header.Get("User-Agent")
+	uaParser := useragent.NewParser()
+	ua := uaParser.Parse(uaString)
+
+	createClickDto.UrlId = url.ID
+	createClickDto.Ip = ip
+	createClickDto.Browser = ua.Browser().String()
+	createClickDto.Os = ua.OS().String()
+
+	_, err = u.clickService.Create(&createClickDto)
+	if err != nil {
+		fmt.Println("erro: ", err)
 	}
 
 	http.Redirect(w, r, url.LongUrl, 302)

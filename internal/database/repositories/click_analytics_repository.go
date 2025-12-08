@@ -30,10 +30,9 @@ func (c *ClickAnalyticsRepository) Create(createClickDto *dto.CreateClickDto) (m
 		Ip:        createClickDto.Ip,
 		Country:   createClickDto.Country,
 		City:      createClickDto.City,
-		Device:    createClickDto.Device,
 		Browser:   createClickDto.Browser,
 		Os:        createClickDto.Os,
-		Referer:   createClickDto.Referer,
+		Timezone:  createClickDto.Timezone,
 		ClickedAt: time.Now(),
 	}
 

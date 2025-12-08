@@ -47,16 +47,21 @@ func main() {
 
 	urlRepository := repositories.NewUrlRepository(ctx, db)
 	urlService := service.NewUrlService(urlRepository)
-	urlHandler := handler.NewUrlHandler(urlService)
+
+	clickRepository := repositories.NewClickAnalyticsRepository(ctx, db)
+	clickService := service.NewClickService(ctx, clickRepository)
+
+	urlHandler := handler.NewUrlHandler(urlService, clickService)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-limiter:
-			if r.Method == "POST" {
+			switch r.Method {
+			case "POST":
 				urlHandler.Create(w, r)
-			} else if r.Method == "GET" {
+			case "GET":
 				urlHandler.FindByShortCode(w, r)
-			} else {
+			default:
 				w.WriteHeader(http.StatusMethodNotAllowed)
 			}
 

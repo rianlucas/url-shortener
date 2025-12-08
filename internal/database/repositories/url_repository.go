@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/rianlucas/url-shortener/internal/database"
 	"time"
+
+	"github.com/rianlucas/url-shortener/internal/database"
 
 	"github.com/rianlucas/url-shortener/internal/dto"
 	"github.com/rianlucas/url-shortener/internal/models"
