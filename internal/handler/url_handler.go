@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/medama-io/go-useragent"
@@ -117,7 +116,7 @@ func (u *UrlHandler) FindByShortCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UrlHandler) ShowQrCode(w http.ResponseWriter, r *http.Request) {
-	shortCode := strings.TrimPrefix(r.URL.Path, "/qr-code/")
+	shortCode := chi.URLParam(r, "shortCode")
 
 	if shortCode == "" {
 		log.Println("[QR-CODE] ERROR: ShortCode is empty!")

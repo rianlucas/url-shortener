@@ -63,32 +63,7 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/{shortCode}", urlHandler.FindByShortCode)
 		r.Post("/", urlHandler.Create)
-	})
-
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	select {
-	// 	case <-limiter:
-	// 		switch r.Method {
-	// 		case "POST":
-	// 			urlHandler.Create(w, r)
-	// 		case "GET":
-	// 			urlHandler.FindByShortCode(w, r)
-	// 		default:
-	// 			w.WriteHeader(http.StatusMethodNotAllowed)
-	// 		}
-
-	// 	default:
-	// 		w.WriteHeader(http.StatusTooManyRequests)
-	// 		w.Header().Set("Content-Type", "Application/json")
-	// 		json.NewEncoder(w).Encode(map[string]any{
-	// 			"success": false,
-	// 			"error":   "too many requests",
-	// 		})
-	// 	}
-	// })
-
-	http.HandleFunc("/qr-code/", func(w http.ResponseWriter, r *http.Request) {
-		urlHandler.ShowQrCode(w, r)
+		r.Get("/qr-code/{shortCode}", urlHandler.ShowQrCode)
 	})
 
 	log.Println("✅ Server configured successfully!")
