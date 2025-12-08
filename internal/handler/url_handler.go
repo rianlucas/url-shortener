@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/medama-io/go-useragent"
 	"github.com/rianlucas/url-shortener/internal/dto"
 	"github.com/rianlucas/url-shortener/internal/service"
@@ -69,7 +70,7 @@ func (u *UrlHandler) Create(w http.ResponseWriter, r *http.Request) {
 func (u *UrlHandler) FindByShortCode(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	shortCode := strings.TrimPrefix(r.URL.Path, "/")
+	shortCode := chi.URLParam(r, "shortCode")
 
 	if shortCode == "" {
 		w.WriteHeader(http.StatusBadRequest)

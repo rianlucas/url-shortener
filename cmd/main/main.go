@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rianlucas/url-shortener/config"
 	"github.com/rianlucas/url-shortener/internal/database"
 	"github.com/rianlucas/url-shortener/internal/database/repositories"
@@ -53,27 +54,38 @@ func main() {
 
 	urlHandler := handler.NewUrlHandler(urlService, clickService)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		select {
-		case <-limiter:
-			switch r.Method {
-			case "POST":
-				urlHandler.Create(w, r)
-			case "GET":
-				urlHandler.FindByShortCode(w, r)
-			default:
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(30 * time.Second))
 
-		default:
-			w.WriteHeader(http.StatusTooManyRequests)
-			w.Header().Set("Content-Type", "Application/json")
-			json.NewEncoder(w).Encode(map[string]any{
-				"success": false,
-				"error":   "too many requests",
-			})
-		}
+	r.Route("/", func(r chi.Router) {
+		r.Get("/{shortCode}", urlHandler.FindByShortCode)
+		r.Post("/", urlHandler.Create)
 	})
+
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	select {
+	// 	case <-limiter:
+	// 		switch r.Method {
+	// 		case "POST":
+	// 			urlHandler.Create(w, r)
+	// 		case "GET":
+	// 			urlHandler.FindByShortCode(w, r)
+	// 		default:
+	// 			w.WriteHeader(http.StatusMethodNotAllowed)
+	// 		}
+
+	// 	default:
+	// 		w.WriteHeader(http.StatusTooManyRequests)
+	// 		w.Header().Set("Content-Type", "Application/json")
+	// 		json.NewEncoder(w).Encode(map[string]any{
+	// 			"success": false,
+	// 			"error":   "too many requests",
+	// 		})
+	// 	}
+	// })
 
 	http.HandleFunc("/qr-code/", func(w http.ResponseWriter, r *http.Request) {
 		urlHandler.ShowQrCode(w, r)
